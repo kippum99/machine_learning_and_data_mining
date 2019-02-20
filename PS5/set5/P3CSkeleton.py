@@ -76,13 +76,21 @@ if __name__ == "__main__":
     word_to_index = generate_onehot_dict(sample_text)
     # Create training data using default window size
     trainX, trainY = generate_traindata(sample_text, word_to_index)
+
     # TODO: 1) Create and train model in Keras.
     # vocab_size = number of unique words in our text file. Will be useful when adding layers
     # to your neural network
     vocab_size = len(word_to_index)
     model = Sequential()
+    model.add(Dense(10, input_dim=vocab_size))
+    model.add(Dense(vocab_size, activation='softmax'))
+    # optimzer, metrics?
+    model.compile(loss='categorical_crossentropy')
+    model.fit(trainX, trainY)
+
     # TODO: 2) Extract weights for hidden layer, set <weights> variable below
-    weights = None
+    # Each row would be a weight vector
+    weights = model.layers[0].get_weights()[0]
 
     # Find and print most similar pairs
     similar_pairs = most_similar_pairs(weights, word_to_index)
