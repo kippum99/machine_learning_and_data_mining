@@ -23,7 +23,7 @@ def get_word_repr(word_to_index, word):
     # Return a vector that's zero everywhere besides the index corresponding to <word>
     feature_representation = np.zeros(len(unique_words))
     feature_representation[word_to_index[word]] = 1
-    return feature_representation    
+    return feature_representation
 
 def generate_traindata(word_list, word_to_index, window_size=4):
     """
@@ -38,8 +38,8 @@ def generate_traindata(word_list, word_to_index, window_size=4):
                        (use the default value when running your code).
 
     Returns:
-        (trainX, trainY):     A pair of matrices (trainX, trainY) containing training 
-                              points (one-hot-encoded vectors representing individual words) and 
+        (trainX, trainY):     A pair of matrices (trainX, trainY) containing training
+                              points (one-hot-encoded vectors representing individual words) and
                               their corresponding labels (also one-hot-encoded vectors representing words).
 
                               For each index i, trainX[i] should correspond to a word in
@@ -48,7 +48,16 @@ def generate_traindata(word_list, word_to_index, window_size=4):
     """
     trainX = []
     trainY = []
+
     # TODO: Implement this function, populating trainX and trainY
+    for i in range(len(word_list)):
+        x = get_word_repr(word_to_index, word_list[i])
+        for j in range(i - window_size, i + window_size + 1):
+            if j >= 0 and j < len(word_list):
+                y = get_word_repr(word_to_index, word_list[j])
+                trainX.append(x)
+                trainY.append(y)
+
     return (np.array(trainX), np.array(trainY))
 
 
@@ -67,7 +76,7 @@ if __name__ == "__main__":
     word_to_index = generate_onehot_dict(sample_text)
     # Create training data using default window size
     trainX, trainY = generate_traindata(sample_text, word_to_index)
-    # TODO: 1) Create and train model in Keras.      
+    # TODO: 1) Create and train model in Keras.
     # vocab_size = number of unique words in our text file. Will be useful when adding layers
     # to your neural network
     vocab_size = len(word_to_index)

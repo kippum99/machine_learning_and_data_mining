@@ -12,7 +12,7 @@ def grad_U(Ui, Yij, Vj, reg, eta):
     Returns the gradient of the regularized loss function with
     respect to Ui multiplied by eta.
     """
-    pass   
+    pass
 
 def grad_V(Vj, Yij, Ui, reg, eta):
     """
@@ -34,8 +34,13 @@ def get_err(U, V, Y, reg=0.0):
     Returns the mean regularized squared-error of predictions made by
     estimating Y_{ij} as the dot product of the ith row of U and the jth column of V^T.
     """
-    pass
+    tot_err = 0
 
+    for row in Y:
+        [i, j, y] = row
+        tot_err += 0.5 * (y - np.dot(U[i], V[j])) ** 2
+
+    return tot_err / len(Y)
 
 def train_model(M, N, K, eta, reg, Y, eps=0.0001, max_epochs=300):
     """
@@ -52,4 +57,29 @@ def train_model(M, N, K, eta, reg, Y, eps=0.0001, max_epochs=300):
     Returns a tuple (U, V, err) consisting of U, V, and the unregularized MSE
     of the model.
     """
-    pass
+    # Initialize U, V
+    U = np.random.uniform(-0.5, 0.5, (M, K))
+    V = np.random.uniform(-0.5, 0.5, (N, K))
+
+    # Store initial loss reduction
+    init_loss_reduction = get_err(U, V, Y)
+
+    for epoch in range(max_epochs):
+        # Shuffle training data indices
+        indices = np.random.permutation(len(Y))
+
+        # Loop through each data point and update weights
+        for index in indices:
+            [i, j, y] = Y[index]
+            U[i] -= grad_U(U[i], y, V[j], reg, eta)
+            V[j] -= grad_V(V[j], y, U[i], reg, eta)
+
+        # Store initial loss reduction or compare with intiial loss reduction
+        loss = get_err(U, V, Y)
+        if epoch == 0:
+            init_loss_reduction -= loss
+            prev_loss = loss
+        else:
+            if (prev_loss - loss) / init_loss_reduction <= eps:
+                break
+            prev_loss = loss
