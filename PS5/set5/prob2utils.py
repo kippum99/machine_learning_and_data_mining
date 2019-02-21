@@ -1,6 +1,3 @@
-# Solution set for CS 155 Set 6, 2016/2017
-# Authors: Fabian Boemer, Sid Murching, Suraj Nair
-
 import numpy as np
 
 def grad_U(Ui, Yij, Vj, reg, eta):
@@ -12,7 +9,7 @@ def grad_U(Ui, Yij, Vj, reg, eta):
     Returns the gradient of the regularized loss function with
     respect to Ui multiplied by eta.
     """
-    pass
+    return eta * (reg * Ui - Vj * (Yij - np.dot(Ui, Vj)))
 
 def grad_V(Vj, Yij, Ui, reg, eta):
     """
@@ -23,7 +20,7 @@ def grad_V(Vj, Yij, Ui, reg, eta):
     Returns the gradient of the regularized loss function with
     respect to Vj multiplied by eta.
     """
-    pass
+    return eta * (reg * Vj - Ui * (Yij - np.dot(Ui, Vj)))
 
 def get_err(U, V, Y, reg=0.0):
     """
@@ -38,7 +35,7 @@ def get_err(U, V, Y, reg=0.0):
 
     for row in Y:
         [i, j, y] = row
-        tot_err += 0.5 * (y - np.dot(U[i], V[j])) ** 2
+        tot_err += 0.5 * (y - np.dot(U[i-1], V[j-1])) ** 2
 
     return tot_err / len(Y)
 
@@ -70,7 +67,8 @@ def train_model(M, N, K, eta, reg, Y, eps=0.0001, max_epochs=300):
 
         # Loop through each data point and update weights
         for index in indices:
-            [i, j, y] = Y[index]
+            i, j = Y[index][0] - 1, Y[index][1] - 1
+            y = Y[index][2]
             U[i] -= grad_U(U[i], y, V[j], reg, eta)
             V[j] -= grad_V(V[j], y, U[i], reg, eta)
 
@@ -83,3 +81,5 @@ def train_model(M, N, K, eta, reg, Y, eps=0.0001, max_epochs=300):
             if (prev_loss - loss) / init_loss_reduction <= eps:
                 break
             prev_loss = loss
+
+    return U, V, get_err(U, V, Y)

@@ -2,6 +2,7 @@
 # Authors: Suraj Nair, Sid Murching
 
 from keras.models import Sequential
+from keras.layers import Dense
 from P3CHelpers import *
 import sys
 
@@ -77,18 +78,18 @@ if __name__ == "__main__":
     # Create training data using default window size
     trainX, trainY = generate_traindata(sample_text, word_to_index)
 
-    # TODO: 1) Create and train model in Keras.
+    # Create and train model in Keras.
     # vocab_size = number of unique words in our text file. Will be useful when adding layers
     # to your neural network
     vocab_size = len(word_to_index)
     model = Sequential()
     model.add(Dense(10, input_dim=vocab_size))
     model.add(Dense(vocab_size, activation='softmax'))
-    # optimzer, metrics?
-    model.compile(loss='categorical_crossentropy')
-    model.fit(trainX, trainY)
+    model.compile(optimizer='rmsprop', loss='categorical_crossentropy',
+                    metrics=['accuracy'])
+    model.fit(trainX, trainY, epochs=15)
 
-    # TODO: 2) Extract weights for hidden layer, set <weights> variable below
+    # Extract weights for hidden layer, set <weights> variable below
     # Each row would be a weight vector
     weights = model.layers[0].get_weights()[0]
 
