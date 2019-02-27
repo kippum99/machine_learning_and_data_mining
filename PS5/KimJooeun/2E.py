@@ -1,6 +1,3 @@
-# Solution set for CS 155 Set 6, 2016/2017
-# Authors: Fabian Boemer, Sid Murching, Suraj Nair
-
 import numpy as np
 import matplotlib.pyplot as plt
 from prob2utils import train_model, get_err
