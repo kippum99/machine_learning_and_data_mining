@@ -9,26 +9,28 @@ def main():
     M = max(max(Y_train[:,0]), max(Y_test[:,0])).astype(int) # users
     N = max(max(Y_train[:,1]), max(Y_test[:,1])).astype(int) # movies
     print("Factorizing with ", M, " users, ", N, " movies.")
-    Ks = [10,20,30,50,100]
+    Ks = [20]
 
-    reg = 0.0
-    eta = 0.03 # learning rate
+    reg = 0.1
+    eta = 0.01 # learning rate
+    epsilon = 0.00005
     E_in = []
     E_out = []
 
     # Use to compute Ein and Eout
     for K in Ks:
-        U,V, err = train_model(M, N, K, eta, reg, Y_train)
-        E_in.append(err)
-        E_out.append(get_err(U, V, Y_test))
+        U, V, a, b, err = train_model(M, N, K, eta, reg, Y_train, epsilon)
+        # E_in.append(err)
+        # E_out.append(get_err(U, V, a, b, Y_test))
+        print(get_err(U, V, a, b, Y_test))
 
-    plt.plot(Ks, E_in, label='$E_{in}$')
-    plt.plot(Ks, E_out, label='$E_{out}$')
-    plt.title('Error vs. K')
-    plt.xlabel('K')
-    plt.ylabel('Error')
-    plt.legend()
-    plt.savefig('2d.png')
+    # plt.plot(Ks, E_in, label='$E_{in}$')
+    # plt.plot(Ks, E_out, label='$E_{out}$')
+    # plt.title('Error vs. K')
+    # plt.xlabel('K')
+    # plt.ylabel('Error')
+    # plt.legend()
+    # plt.savefig('2d.png')
 
 
 

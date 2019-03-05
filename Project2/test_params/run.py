@@ -1,20 +1,22 @@
-# Solution set for CS 155 Set 6, 2016/2017
-# Authors: Fabian Boemer, Sid Murching, Suraj Nair
-
 import numpy as np
 import matplotlib.pyplot as plt
 from prob2utils import train_model, get_err
 
+
 def main():
     Y_train = np.loadtxt('data/train.txt').astype(int)
-    Y_test = np.loadtxt('data/test.txt')	.astype(int)
+    Y_test = np.loadtxt('data/test.txt').astype(int)
 
     M = max(max(Y_train[:,0]), max(Y_test[:,0])).astype(int) # users
     N = max(max(Y_train[:,1]), max(Y_test[:,1])).astype(int) # movies
-    Ks = [10,20,30,50,100]
 
+    k = 20
+    #regularization constants
     regs = [10**-4, 10**-3, 10**-2, 10**-1, 1]
-    eta = 0.03 # learning rate
+    #learning rate
+    eta = 0.01
+    #0.00005 best
+    epsilons = [0.00001, 0.00005, 0.0001, 0.0005, 0.001, 0.002]
     E_ins = []
     E_outs = []
 
@@ -23,9 +25,9 @@ def main():
         E_ins_for_lambda = []
         E_outs_for_lambda = []
 
-        for k in Ks:
-            print("Training model with M = %s, N = %s, k = %s, eta = %s, reg = %s"%(M, N, k, eta, reg))
-            U,V, e_in = train_model(M, N, k, eta, reg, Y_train)
+        for ep in epsilons:
+            print("Training model with M = %s, N = %s, k = %s, eta = %s, reg = %s, ep = %s"%(M, N, k, eta, reg, ep))
+            U, V, e_in = train_model(M, N, k, eta, reg, Y_train, ep)
             E_ins_for_lambda.append(e_in)
             eout = get_err(U, V, Y_test)
             E_outs_for_lambda.append(eout)
@@ -33,25 +35,24 @@ def main():
         E_ins.append(E_ins_for_lambda)
         E_outs.append(E_outs_for_lambda)
 
-
-    # Plot values of E_in across k for each value of lambda
     for i in range(len(regs)):
-        plt.plot(Ks, E_ins[i], label='$E_{in}, \lambda=$'+str(regs[i]))
-    plt.title('$E_{in}$ vs. K')
-    plt.xlabel('K')
+        plt.plot(epsilons, E_ins[i], label='$E_{in}, \lambda=$'+str(regs[i]))
+    plt.title('$E_{in}$ vs. Epsilon')
+    plt.xlabel('Epsilon')
     plt.ylabel('Error')
+    plt.xscale('log')
     plt.legend()
-    plt.savefig('2e_ein.png')
+    plt.savefig('E_in.png')
     plt.clf()
 
-    # Plot values of E_out across k for each value of lambda
     for i in range(len(regs)):
-        plt.plot(Ks, E_outs[i], label='$E_{out}, \lambda=$'+str(regs[i]))
-    plt.title('$E_{out}$ vs. K')
-    plt.xlabel('K')
+    	plt.plot(epsilons, E_outs[i], label='$E_{out}, \lambda=$'+str(regs[i]))
+    plt.title('$E_{out}$ vs. Epsilon')
+    plt.xlabel('Epsilon')
     plt.ylabel('Error')
+    plt.xscale('log')
     plt.legend()
-    plt.savefig('2e_eout.png')
+    plt.savefig('E_out.png')
 
 if __name__ == "__main__":
     main()

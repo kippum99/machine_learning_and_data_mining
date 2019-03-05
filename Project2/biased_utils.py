@@ -89,9 +89,9 @@ def train_model(M, N, K, eta, reg, Y, eps=0.0001, max_epochs=300):
             y = Y[index][2]
             U[i] -= grad_U(U[i], y, V[j], a[i], b[j], reg, eta)
             V[j] -= grad_V(V[j], y, U[i], a[i], b[j], reg, eta)
-            grad_bias = grad_bias(U[i], V[j], y, a[i], b[j], eta)
-            a[i] -= grad_bias
-            b[j] -= grad_bias
+            grad_a_b = grad_bias(U[i], V[j], y, a[i], b[j], eta)
+            a[i] -= grad_a_b
+            b[j] -= grad_a_b
 
         # Store initial loss reduction or compare with intiial loss reduction
         loss = get_err(U, V, a, b, Y)
