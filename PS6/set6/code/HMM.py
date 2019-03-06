@@ -107,23 +107,21 @@ class HiddenMarkovModel:
         probs = [[0. for _ in range(self.L)] for _ in range(M + 1)]
         seqs = [['' for _ in range(self.L)] for _ in range(M + 1)]
 
-        ### TODO: Insert Your Code Here (2A)
-
         # Compute length-1 probs and seqs
-        for a in range(0, self.L):
+        for a in range(self.L):
             probs[1][a] = self.O[a][x[0]] * self.A_start[a]
             seqs[1][a] = str(a)
 
         # Recursively solve for each j > 1
         for j in range(2, M + 1):
-            for a in range(0, self.L):
+            for a in range(self.L):
                 # Enumerate over previous probs and seqs
                 # a is current state, b is previous state
                 # Find prefix of length j - 1 maximizing probability of prefix
                 # of length j ending in state a and store the prob and prefix
                 prefix = ''
                 max_prob = 0
-                for b in range(0, self.L):
+                for b in range(self.L):
                     prob = probs[j-1][b] * self.A[b][a] * self.O[a][x[j-1]]
                     if prob >= max_prob:
                         prefix = seqs[j-1][b]
@@ -163,13 +161,19 @@ class HiddenMarkovModel:
         M = len(x)      # Length of sequence.
         alphas = [[0. for _ in range(self.L)] for _ in range(M + 1)]
 
-        ###
-        ###
-        ###
-        ### TODO: Insert Your Code Here (2Bi)
-        ###
-        ###
-        ###
+        # Compute alphas for i = 1
+        for a in range(self.L):
+            alphas[1][a] = self.O[a][x[0]] * self.A_start[a]
+
+        # Recursively solve for each i > 1
+        for i in range(2, M + 1):
+            for a in range(self.L):
+                sum_probs = 0
+                for b in range(self.L):
+                    sum_probs += alphas[i-1][b] * self.A[b][a]
+                alphas[i][a] = self.O[a][x[i-1]] * sum_probs
+            if normalize:
+                alphas[i] = [alpha / sum(alphas[i]) for alpha in alphas[i]]
 
         return alphas
 
@@ -202,13 +206,18 @@ class HiddenMarkovModel:
         M = len(x)      # Length of sequence.
         betas = [[0. for _ in range(self.L)] for _ in range(M + 1)]
 
-        ###
-        ###
-        ###
-        ### TODO: Insert Your Code Here (2Bii)
-        ###
-        ###
-        ###
+        # Compute betas for i = M
+        betas[M] = [1. for _ in range(self.L)]
+
+        # Recursively solve for each i < M
+        for i in range(M - 1, 0, -1):
+            for a in range(self.L):
+                sum_probs = 0
+                for b in range(self.L):
+                    sum_probs += betas[i+1][b] * self.A[a][b] * self.O[b][x[i]]
+                betas[i][a] = sum_probs
+            if normalize:
+                betas[i] = [beta / sum(betas[i]) for beta in betas[i]]
 
         return betas
 
@@ -234,27 +243,33 @@ class HiddenMarkovModel:
                         Note that the elements in X line up with those in Y.
         '''
 
-        # Calculate each element of A using the M-step formulas.
+        N = len(X)
 
-        ###
-        ###
-        ###
-        ### TODO: Insert Your Code Here (2C)
-        ###
-        ###
-        ###
+        # Calculate each element of A using the M-step formulas.
+        for a in range(self.L):
+            for b in range(self.L):
+                denom = 0
+                numer = 0
+                for i in range(N):
+                    for j in range(1, len(Y[i])):
+                        if Y[i][j-1] == a:
+                            denom += 1
+                            if Y[i][j] == b:
+                                numer += 1
+                self.A[a][b] = numer / denom
 
         # Calculate each element of O using the M-step formulas.
-
-        ###
-        ###
-        ###
-        ### TODO: Insert Your Code Here (2C)
-        ###
-        ###
-        ###
-
-        pass
+        for a in range(self.L):
+            for w in range(self.D):
+                denom = 0
+                numer = 0
+                for i in range(N):
+                    for j in range(len(Y[i])):
+                        if Y[i][j] == a:
+                            denom += 1
+                            if X[i][j] == w:
+                                numer += 1
+                self.O[a][w] = numer / denom
 
 
     def unsupervised_learning(self, X, N_iters):
@@ -271,15 +286,68 @@ class HiddenMarkovModel:
             N_iters:    The number of iterations to train on.
         '''
 
-        ###
-        ###
-        ###
-        ### TODO: Insert Your Code Here (2D)
-        ###
-        ###
-        ###
+        # Number of training examples (sequences) in X
+        N = len(X)
 
-        pass
+        # Store marginal probabilities in a matrix (same shape as X)
+        # marg2[i][j][a] = P(y_i^j = a, x_i)
+        # marg3[i][j][a][b] = P(y_i^j = a, y_i^(j+1) = b, x_i)
+        marg2 = [[[0. for _ in range(self.L)] for _ in range(len(seq))]
+                                                                for seq in X]
+        marg3 = [[[[0. for _ in range(self.L)] for _ in range(self.L)]
+                    for _ in range(len(seq))] for seq in X]
+
+        # Try with 1 epoch
+
+        # E-step - calculate marginal probabilities for each training example
+        for i in range(N):
+            alphas = self.forward(X[i], True)
+            betas = self.backward(X[i], True)
+            for j in range(1, len(X[i] + 1)):
+                alphas_j = alphas[j]
+                betas_j = betas[j]
+
+                # Compute marg2_ij_prob for each state a
+                # marg2_ij is a length-L vector of those probabilities with each
+                # element corresponding to each state
+                # Divide the vector by the sum of the elements (alpha * beta)
+                # (denominator is that sum for all probabilities)
+                marg2_ij = [0. for _ in range(self.L)]
+                for a in range(self.L):
+                    marg2_ij[a] = alphas_j[a] * betas_j[a]
+                sum_denom = sum(marg2_ij)
+                marg2[i][j-1] = [prob / sum_denom for prob in marg2_ij]
+
+                # If j is the last index, j + 1 is out of bounds and marg3_ij
+                # cannot be computed
+                if j == len(X[i]):
+                    break
+
+                # Compute marg3_ij_prob for each state a and b
+                # marg3_ij is a L x L matrix of those probabilities with each
+                # element corresponding to a pair of states a, b
+                marg3_ij = [[0. for _ in range(self.L)] for _ in range(self.L)]
+                sum_denom = 0
+                for a in range(self.L):
+                    for b in range(self.L):
+                        marg3_ij[a][b] = alphas_j[a] * self.O[b][X[i][j]]
+                                            * self.A[a][b] * betas[j+1][b]
+                        sum_denom += marg3_ij[a][b]
+                marg3[i][j-1] = [[prob / sum_denom for prob in row]
+                                                        for row in marg3_ij]
+
+        # M-step - update A
+        for a in range(self.L):
+            for b in range(self.L):
+                denom = 0
+                numer = 0
+                for i in range(N):
+                    for j in range(1, len(Y[i])):
+                        if Y[i][j-1] == a:
+                            denom += 1
+                            if Y[i][j] == b:
+                                numer += 1
+                self.A[a][b] = numer / denom        
 
 
     def generate_emission(self, M):
