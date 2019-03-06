@@ -251,6 +251,8 @@ class HiddenMarkovModel:
                 denom = 0
                 numer = 0
                 for i in range(N):
+                    # Start from 1, since y^0, start state is always START
+                    # and we're not interested in transition from y^0 to y^1
                     for j in range(1, len(Y[i])):
                         if Y[i][j-1] == a:
                             denom += 1
@@ -303,7 +305,7 @@ class HiddenMarkovModel:
         for i in range(N):
             alphas = self.forward(X[i], True)
             betas = self.backward(X[i], True)
-            for j in range(1, len(X[i] + 1)):
+            for j in range(1, len(X[i]) + 1):
                 alphas_j = alphas[j]
                 betas_j = betas[j]
 
@@ -330,8 +332,8 @@ class HiddenMarkovModel:
                 sum_denom = 0
                 for a in range(self.L):
                     for b in range(self.L):
-                        marg3_ij[a][b] = alphas_j[a] * self.O[b][X[i][j]]
-                                            * self.A[a][b] * betas[j+1][b]
+                        marg3_ij[a][b] = (alphas_j[a] * self.O[b][X[i][j]]
+                                            * self.A[a][b] * betas[j+1][b])
                         sum_denom += marg3_ij[a][b]
                 marg3[i][j-1] = [[prob / sum_denom for prob in row]
                                                         for row in marg3_ij]
@@ -342,12 +344,22 @@ class HiddenMarkovModel:
                 denom = 0
                 numer = 0
                 for i in range(N):
-                    for j in range(1, len(Y[i])):
-                        if Y[i][j-1] == a:
-                            denom += 1
-                            if Y[i][j] == b:
-                                numer += 1
-                self.A[a][b] = numer / denom        
+                    for j in range(1, len(X[i])):
+                        denom += marg2[i][j-1][a]
+                        numer += marg3[i][j-1][a][b]
+                self.A[a][b] = numer / denom
+
+        # M-step - update O
+        for a in range(self.L):
+            for w in range(self.D):
+                denom = 0
+                numer = 0
+                for i in range(N):
+                    for j in range(len(X[i])):
+                        denom += marg2[i][j][a]
+                        if X[i][j] == w:
+                            numer += marg2[i][j][a]
+                self.O[a][w] = numer / denom
 
 
     def generate_emission(self, M):
@@ -507,6 +519,8 @@ def unsupervised_HMM(X, n_states, N_iters):
     L = n_states
     D = len(observations)
 
+    random.seed(2019)
+    
     # Randomly initialize and normalize matrix A.
     A = [[random.random() for i in range(L)] for j in range(L)]
 
