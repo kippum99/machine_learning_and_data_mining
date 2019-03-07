@@ -291,13 +291,14 @@ class HiddenMarkovModel:
         # Number of training examples (sequences) in X
         N = len(X)
 
-        # Store marginal probabilities in a matrix (same shape as X)
-        # marg2[i][j][a] = P(y_i^j = a, x_i)
+        # Store marginal probabilities in a matrix
+        # marg2[i][j][a] = P(y_i^j = a, x_i) same shape as X
         # marg3[i][j][a][b] = P(y_i^j = a, y_i^(j+1) = b, x_i)
+        # 2nd dimesnion of marg3 is M_i - 1, not M_i
         marg2 = [[[0. for _ in range(self.L)] for _ in range(len(seq))]
                                                                 for seq in X]
         marg3 = [[[[0. for _ in range(self.L)] for _ in range(self.L)]
-                    for _ in range(len(seq))] for seq in X]
+                    for _ in range(len(seq) - 1)] for seq in X]
 
         # Train for N_iters iterations
         for iter in range(N_iters):
