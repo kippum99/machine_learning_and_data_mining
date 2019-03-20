@@ -236,9 +236,6 @@ class HiddenMarkovModel:
         return betas
 
 
-
-
-
     def unsupervised_learning(self, X, N_iters):
         '''
         Trains the HMM using the Baum-Welch algorithm on an unlabeled
@@ -328,6 +325,7 @@ class HiddenMarkovModel:
             for curr in range(self.L):
                 for xt in range(self.D):
                     self.O[curr][xt] = O_num[curr][xt] / O_den[curr]
+
 
     def generate_emission(self, M, obs_map_r, syl_dict):
         '''
@@ -551,9 +549,6 @@ class HiddenMarkovModel:
             for k in range(self.L)])
 
         return prob
-
-
-
 
 
 def unsupervised_HMM(X, n_states, N_iters):
